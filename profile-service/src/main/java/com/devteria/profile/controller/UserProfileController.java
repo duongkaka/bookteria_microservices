@@ -1,7 +1,10 @@
-package com.devteria.profile;
+package com.devteria.profile.controller;
+
+import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.devteria.profile.dto.ApiResponse;
 import com.devteria.profile.dto.request.ProfileCreationRequest;
 import com.devteria.profile.dto.response.UserProfileResponse;
 import com.devteria.profile.service.UserProfileService;
@@ -20,6 +23,13 @@ public class UserProfileController {
     UserProfileResponse createProfile(@RequestBody ProfileCreationRequest request) {
 
         return userProfileService.createProfile(request);
+    }
+
+    @GetMapping("/")
+    ApiResponse<List<UserProfileResponse>> getAllProfiles() {
+        return ApiResponse.<List<UserProfileResponse>>builder()
+                .result(userProfileService.getAllProfiles())
+                .build();
     }
 
     @GetMapping("/{profileId}")
