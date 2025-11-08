@@ -17,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GmailService {
     private final JavaMailSender mailSender;
+
     String apiKey = "";
 
     public EmailResponse sendEmail(SendEmailRequest request) {

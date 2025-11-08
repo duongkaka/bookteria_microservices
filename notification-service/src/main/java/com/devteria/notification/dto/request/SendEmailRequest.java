@@ -1,7 +1,5 @@
 package com.devteria.notification.dto.request;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.*;

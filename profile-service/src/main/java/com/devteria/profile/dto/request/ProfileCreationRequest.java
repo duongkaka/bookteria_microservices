@@ -14,6 +14,8 @@ import lombok.experimental.FieldDefaults;
 public class ProfileCreationRequest {
 
     String userId;
+    String username;
+    String email;
     String firstName;
     String lastName;
     LocalDate dob;
