@@ -785,10 +785,7 @@
 								"key": "accept",
 								"value": "application/json"
 							},
-							{
-								"key": "api-key",
-								"value": "<your-api-key>"
-							},
+
 							{
 								"key": "content-type",
 								"value": "application/json"
