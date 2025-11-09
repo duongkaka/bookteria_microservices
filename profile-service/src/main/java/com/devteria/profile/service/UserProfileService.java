@@ -60,4 +60,12 @@ public class UserProfileService {
 
         return userProfileMapper.toUserProfileResponse(profile);
     }
+
+    public UserProfileResponse getByUserId(String userId) {
+        UserProfile userProfile = userProfileRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return userProfileMapper.toUserProfileResponse(userProfile);
+    }
 }
