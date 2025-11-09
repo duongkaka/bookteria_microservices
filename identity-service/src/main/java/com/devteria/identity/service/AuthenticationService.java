@@ -131,7 +131,6 @@ public class AuthenticationService {
                 .expirationTime(expiryTime)
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
-
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());

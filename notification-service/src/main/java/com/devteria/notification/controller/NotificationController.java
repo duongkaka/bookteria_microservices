@@ -1,6 +1,5 @@
 package com.devteria.notification.controller;
 
-import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -17,14 +16,13 @@ public class NotificationController {
         log.info("Message received: {}", message);
     }
 
-
     @KafkaListener(topics = "notification-delivery", groupId = "notification-group")
     public void listenNotificationDelivery(NotificationEvent message) {
         log.info("Message received: {}", message);
-//        gmailService.sendEmail(SendEmailRequest.builder()
-//                .to(message.getRecipient())
-//                .subject(message.getSubject())
-//                .htmlContent(message.getBody())
-//                .build());
+        //        gmailService.sendEmail(SendEmailRequest.builder()
+        //                .to(message.getRecipient())
+        //                .subject(message.getSubject())
+        //                .htmlContent(message.getBody())
+        //                .build());
     }
 }

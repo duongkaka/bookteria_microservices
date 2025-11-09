@@ -1,10 +1,10 @@
-package com.devteria.profile.dto.response;
-
-import java.util.Collections;
-import java.util.List;
+package com.devteria.post.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,7 +16,9 @@ public class PageResponse<T> {
     int totalPages;
     int pageSize;
     long totalElements;
+    int currentPage;
 
     @Builder.Default
     private List<T> data = Collections.emptyList();
+
 }

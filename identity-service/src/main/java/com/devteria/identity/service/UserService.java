@@ -30,7 +30,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.concurrent.ListenableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +65,7 @@ public class UserService {
         profileRequest.setUserId(user.getId());
         var profile = profileClient.createProfile(profileRequest);
         System.out.println(" profile :" + profileRequest);
-       // Gửi Kafka notification
+        // Gửi Kafka notification
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .channel("EMAIL")
                 .recipient(request.getEmail())
@@ -75,8 +74,11 @@ public class UserService {
                 .build();
         // Publish message to kafka
         try {
-            SendResult<String, Object> result = kafkaTemplate.send("notification-delivery", notificationEvent).get();
-            System.out.println("Message sent to topic: " + result.getRecordMetadata().topic());
+            SendResult<String, Object> result = kafkaTemplate
+                    .send("notification-delivery", notificationEvent)
+                    .get();
+            System.out.println(
+                    "Message sent to topic: " + result.getRecordMetadata().topic());
         } catch (Exception e) {
             System.err.println("Send failed: " + e.getMessage());
         }
