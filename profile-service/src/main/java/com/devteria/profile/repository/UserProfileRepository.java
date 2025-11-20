@@ -10,4 +10,6 @@ import com.devteria.profile.entity.UserProfile;
 @Repository
 public interface UserProfileRepository extends Neo4jRepository<UserProfile, String> {
     Optional<UserProfile> findByUserId(String userId);
+
+    List<UserProfile> findAllByUsernameLike(String username);
 }

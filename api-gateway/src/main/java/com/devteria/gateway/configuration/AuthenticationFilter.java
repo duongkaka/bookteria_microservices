@@ -38,7 +38,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     IdentityService identityService;
     ObjectMapper objectMapper;
     @NonFinal
-    private String[]publicEndpoints = {"/identity/auth/.*","/identity/auth/token","/identity/auth/introspect","/identity/auth/logout","/identity/users/registration"};
+    private String[]publicEndpoints = {"/identity/auth/.*","/identity/auth/token","/identity/auth/introspect","/identity/auth/logout","/identity/users/registration"
+    ,"/file/media/download/"};
+
 
     @Value("${app.api-prefix}")
     @NonFinal
@@ -75,6 +77,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicEndpoint(org.springframework.http.server.reactive.ServerHttpRequest request) {
+
+
         return Arrays.stream(publicEndpoints)
                 .anyMatch(endpoint -> request.getURI().getPath().startsWith(apiPrefix + endpoint));
     }

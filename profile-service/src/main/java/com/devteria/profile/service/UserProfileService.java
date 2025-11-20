@@ -4,14 +4,18 @@ import java.util.List;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.devteria.profile.dto.request.ProfileCreationRequest;
+import com.devteria.profile.dto.request.SearchUserRequest;
+import com.devteria.profile.dto.request.UpdateProfileRequest;
 import com.devteria.profile.dto.response.UserProfileResponse;
 import com.devteria.profile.entity.UserProfile;
 import com.devteria.profile.exception.AppException;
 import com.devteria.profile.exception.ErrorCode;
 import com.devteria.profile.mapper.UserProfileMapper;
 import com.devteria.profile.repository.UserProfileRepository;
+import com.devteria.profile.repository.httpclient.FileClient;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ public class UserProfileService {
 
     UserProfileRepository userProfileRepository;
     UserProfileMapper userProfileMapper;
+    FileClient fileClient;
 
     public UserProfileResponse createProfile(ProfileCreationRequest request) {
         UserProfile userProfile = userProfileMapper.toUserProfile(request);
@@ -67,5 +72,43 @@ public class UserProfileService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         return userProfileMapper.toUserProfileResponse(userProfile);
+    }
+
+    public UserProfileResponse updateMyProfile(UpdateProfileRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        var profile = userProfileRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        userProfileMapper.update(profile, request);
+
+        userProfileRepository.save(profile);
+
+        return userProfileMapper.toUserProfileResponse(profile);
+    }
+
+    public UserProfileResponse updateAvatar(MultipartFile file) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        var profile = userProfileRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var response = fileClient.uploadMedia(file);
+        profile.setAvatar(response.getResult().getUrl());
+
+        return userProfileMapper.toUserProfileResponse(userProfileRepository.save(profile));
+    }
+
+    public List<UserProfileResponse> search(SearchUserRequest request) {
+        var userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<UserProfile> userProfiles = userProfileRepository.findAllByUsernameLike(request.getKeyword());
+
+        return userProfiles.stream()
+                .filter(userProfile -> !userId.equals(userProfile.getUserId()))
+                .map(userProfileMapper::toUserProfileResponse)
+                .toList();
     }
 }

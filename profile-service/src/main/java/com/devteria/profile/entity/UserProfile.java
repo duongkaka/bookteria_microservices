@@ -27,6 +27,7 @@ public class UserProfile {
     String userId;
 
     String username;
+    String avatar;
     String email;
 
     String firstName;
