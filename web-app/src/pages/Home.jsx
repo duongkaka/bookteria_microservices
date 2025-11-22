@@ -1,11 +1,21 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Card, CircularProgress, Typography } from "@mui/material";
-import { isAuthenticated } from "../services/authenticationService";
+
 import Scene from "./Scene";
 import Post from "../components/Post";
-import { getMyPosts } from "../services/postService";
-import { logOut } from "../services/authenticationService";
+import { getMyPosts, createPost } from "../services/postService";
+
+import {
+  Fab,
+  Popover,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { isAuthenticated, logOut } from "../services/authenticationService";
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -15,6 +25,58 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(false);
   const observer = useRef();
   const lastPostElementRef = useRef();
+
+  // New chat
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+   // Handle opening the popover
+  const handleCreatePostClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  // Handle closing the popover
+  const handleClosePopover = () => {
+    setAnchorEl(null);
+    setNewPostContent("");
+  };
+
+  // Handle Snackbar close
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  // Handle posting new content
+  const handlePostContent = () => {
+    console.log("New post content:", newPostContent);
+    handleClosePopover();
+
+    createPost(newPostContent)
+      .then((response) => {
+        console.log("Post created successfully:", response.data);
+        setPosts((prevPosts) => [response.data.result, ...prevPosts]);
+        setNewPostContent("");
+        setSnackbarMessage("Post created successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      })
+      .catch((error) => {
+        console.error("Error creating post:", error);
+        setSnackbarMessage("Failed to create post. Please try again.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      });
+  };
+
+  const open = Boolean(anchorEl);
+  const popoverId = open ? "post-popover" : undefined;
+
+
 
   const navigate = useNavigate();
 
@@ -67,6 +129,24 @@ export default function Home() {
 
   return (
     <Scene>
+      {/*  */}
+      {" "}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{ marginTop: "64px" }} // Position below the header
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+      {/*  */}
       <Card
         sx={{
           minWidth: 500,
@@ -120,6 +200,69 @@ export default function Home() {
           )}
         </Box>
       </Card>
+
+      {/* POST */}
+       {/* Floating Action Button for creating new posts */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleCreatePostClick}
+        sx={{
+          position: "fixed",
+          bottom: 30,
+          right: 30,
+        }}
+      >
+        <AddIcon />
+      </Fab>
+      {/* Popover for creating new post */}{" "}
+      <Popover
+        id={popoverId}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClosePopover}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 5,
+              p: 3,
+              width: 500,
+            },
+          },
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Create new Post
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          placeholder="What's on your mind?"
+          value={newPostContent}
+          onChange={(e) => setNewPostContent(e.target.value)}
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handlePostContent}
+            disabled={!newPostContent.trim()}
+          >
+            Post
+          </Button>
+        </Box>
+      </Popover>
     </Scene>
   );
 }

@@ -10,6 +10,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Link } from "react-router-dom";
+import ChatIcon from "@mui/icons-material/Chat";
 
 function SideMenu() {
   return (
@@ -47,6 +48,17 @@ function SideMenu() {
               primary={"Groups"}
               primaryTypographyProps={{ style: { fontWeight: "bold" } }}
             />
+          </ListItemButton>
+        </ListItem>
+        <ListItem key={"chat"} disablePadding>
+          <ListItemButton component={Link} to="/chat">
+            <ListItemIcon>
+              <ChatIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary={"Chat"}
+              primaryTypographyProps={{ style: { fontWeight: "bold" } }}
+            ></ListItemText>
           </ListItemButton>
         </ListItem>
       </List>

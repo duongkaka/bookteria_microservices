@@ -37,7 +37,7 @@ public class UserProfileController {
                 .build();
     }
 
-    @GetMapping("/{profileId}")
+    @GetMapping("/users/{profileId}")
     UserProfileResponse getProfile(@PathVariable String profileId) {
         return userProfileService.getProfile(profileId);
     }

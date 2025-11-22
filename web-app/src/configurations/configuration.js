@@ -8,4 +8,8 @@ export const API = {
   MY_POST: "/post/my-posts",
   UPDATE_PROFILE: "/profile/users/my-profile",
   UPDATE_AVATAR: "/profile/users/avatar",
+  SEARCH_USER: "/profile/users/search",
+  MY_CONVERSATIONS: "/chat/conversations/my-conversations",
+  CREATE_CONVERSATION: "/chat/conversations/create",
+  CREATE_POST:"/post/create"
 };
