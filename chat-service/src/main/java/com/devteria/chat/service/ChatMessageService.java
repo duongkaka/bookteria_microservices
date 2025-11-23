@@ -2,7 +2,10 @@ package com.devteria.chat.service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,12 +15,16 @@ import com.devteria.chat.dto.request.ChatMessageRequest;
 import com.devteria.chat.dto.response.ChatMessageResponse;
 import com.devteria.chat.entity.ChatMessage;
 import com.devteria.chat.entity.ParticipantInfo;
+import com.devteria.chat.entity.WebSocketSession;
 import com.devteria.chat.exception.AppException;
 import com.devteria.chat.exception.ErrorCode;
 import com.devteria.chat.mapper.ChatMessageMapper;
 import com.devteria.chat.repository.ChatMessageRepository;
 import com.devteria.chat.repository.ConversationRepository;
+import com.devteria.chat.repository.WebSocketSessionRepository;
 import com.devteria.chat.repository.httpclient.ProfileClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +42,10 @@ public class ChatMessageService {
     ChatMessageMapper chatMessageMapper;
     ProfileClient profileClient;
     SocketIOServer socketIOServer;
+    WebSocketSessionRepository webSocketSessionRepository;
+    ObjectMapper objectMapper;
 
-    public ChatMessageResponse create(ChatMessageRequest request) {
+    public ChatMessageResponse create(ChatMessageRequest request) throws JsonProcessingException {
 
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         // Validate conversationId
@@ -68,10 +77,29 @@ public class ChatMessageService {
         chatMessage.setCreatedDate(Instant.now());
         // Create chat message
         chatMessage = chatMessageRepository.save(chatMessage);
-        String message = chatMessage.getMessage();
-        // Publish socket event to clients
+        String message = objectMapper.writeValueAsString(chatMessage.getMessage());
+        // Publish socket event to clients in participants
+        // Get Participants userIds
+        List<String> userIds = converation.getParticipants().stream()
+                .map(ParticipantInfo::getUserId)
+                .toList();
+        // Get socketSession
+        Map<String, WebSocketSession> webSocketSessions = webSocketSessionRepository.findAllByUserIdIn(userIds).stream()
+                .collect(Collectors.toMap(WebSocketSession::getSocketSessionId, Function.identity()));
+
+        ChatMessageResponse chatMessageResponse = chatMessageMapper.toChatMessageResponse(chatMessage);
+
         socketIOServer.getAllClients().forEach(client -> {
-            client.sendEvent("message", message);
+            var webSocketSession = webSocketSessions.get(client.getSessionId().toString());
+            if (Objects.nonNull(webSocketSession)) {
+                try {
+                    chatMessageResponse.setMe(webSocketSession.getUserId().equals(userId));
+                    String msg = objectMapper.writeValueAsString(chatMessageResponse);
+                    client.sendEvent("message", msg);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         });
 
         // convert to Response
