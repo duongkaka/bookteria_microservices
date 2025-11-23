@@ -7,6 +7,7 @@ import java.util.Objects;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.corundumstudio.socketio.SocketIOServer;
 import com.devteria.chat.dto.request.ChatMessageRequest;
 import com.devteria.chat.dto.response.ChatMessageResponse;
 import com.devteria.chat.entity.ChatMessage;
@@ -33,6 +34,7 @@ public class ChatMessageService {
 
     ChatMessageMapper chatMessageMapper;
     ProfileClient profileClient;
+    SocketIOServer socketIOServer;
 
     public ChatMessageResponse create(ChatMessageRequest request) {
 
@@ -65,8 +67,13 @@ public class ChatMessageService {
                 .build());
         chatMessage.setCreatedDate(Instant.now());
         // Create chat message
-
         chatMessage = chatMessageRepository.save(chatMessage);
+        String message = chatMessage.getMessage();
+        // Publish socket event to clients
+        socketIOServer.getAllClients().forEach(client -> {
+            client.sendEvent("message", message);
+        });
+
         // convert to Response
 
         return toChatMessageResponse(chatMessage);
