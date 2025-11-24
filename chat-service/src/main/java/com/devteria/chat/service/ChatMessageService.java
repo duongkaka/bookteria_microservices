@@ -77,25 +77,29 @@ public class ChatMessageService {
         chatMessage.setCreatedDate(Instant.now());
         // Create chat message
         chatMessage = chatMessageRepository.save(chatMessage);
-        String message = objectMapper.writeValueAsString(chatMessage.getMessage());
+
         // Publish socket event to clients in participants
         // Get Participants userIds
         List<String> userIds = converation.getParticipants().stream()
                 .map(ParticipantInfo::getUserId)
                 .toList();
-        // Get socketSession
+        // Get webSocketSessions key :sessionID, value: webSocketSession
         Map<String, WebSocketSession> webSocketSessions = webSocketSessionRepository.findAllByUserIdIn(userIds).stream()
                 .collect(Collectors.toMap(WebSocketSession::getSocketSessionId, Function.identity()));
 
         ChatMessageResponse chatMessageResponse = chatMessageMapper.toChatMessageResponse(chatMessage);
-
+        // Send message to UserId(client) in webSocketSession by SocketSessionId
         socketIOServer.getAllClients().forEach(client -> {
             var webSocketSession = webSocketSessions.get(client.getSessionId().toString());
+
             if (Objects.nonNull(webSocketSession)) {
+                String message = null;
+
                 try {
                     chatMessageResponse.setMe(webSocketSession.getUserId().equals(userId));
-                    String msg = objectMapper.writeValueAsString(chatMessageResponse);
-                    client.sendEvent("message", msg);
+                    chatMessageResponse.setCreateDate(Instant.now());
+                    message = objectMapper.writeValueAsString(chatMessageResponse);
+                    client.sendEvent("message", message);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -103,7 +107,7 @@ public class ChatMessageService {
         });
 
         // convert to Response
-
+        log.info("chat message : {}", toChatMessageResponse(chatMessage));
         return toChatMessageResponse(chatMessage);
     }
 
@@ -126,9 +130,23 @@ public class ChatMessageService {
 
     private ChatMessageResponse toChatMessageResponse(ChatMessage chatMessage) {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        var userResponse = profileClient.getProfile(userId);
+        if (Objects.isNull(userResponse)) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+
+        var userInfo = userResponse.getResult();
         var chatMessageResponse = chatMessageMapper.toChatMessageResponse(chatMessage);
 
         chatMessageResponse.setMe(userId.equals(chatMessage.getSender().getUserId()));
+        chatMessageResponse.setCreateDate(Instant.now());
+        chatMessageResponse.setSender(ParticipantInfo.builder()
+                .userId(userInfo.getUserId())
+                .username(userInfo.getUsername())
+                .firstName(userInfo.getFirstName())
+                .lastName(userInfo.getLastName())
+                .avatar(userInfo.getAvatar())
+                .build());
 
         return chatMessageResponse;
     }
