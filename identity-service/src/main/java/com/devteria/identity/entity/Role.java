@@ -5,6 +5,7 @@ import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Table(name = "app_role")
 public class Role {
     @Id
     String name;
